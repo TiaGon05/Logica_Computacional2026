@@ -1,0 +1,205 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.24.2",
+    "script_metadata_hash": "cdac4f193ea60f385129ed849f93ec6c"
+  },
+  "cells": [
+    {
+      "id": "setup",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "msYn",
+      "code_hash": "a53dc4a73e921958d40705450fdbc2d9",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"relatorio-otimizacao-de-horarios-escolares\">Relat\u00f3rio: Otimiza\u00e7\u00e3o de Hor\u00e1rios Escolares</h1>\n<h2 id=\"1-importacao-de-bibliotecas-e-configuracao-inicial\">1. Importa\u00e7\u00e3o de Bibliotecas e Configura\u00e7\u00e3o Inicial</h2>\n<span class=\"paragraph\">O primeiro passo do nosso c\u00f3digo consiste em importar as ferramentas fundamentais para a manipula\u00e7\u00e3o de dados e resolu\u00e7\u00e3o do problema l\u00f3gico:</span>\n<ul>\n<li><strong><code>os</code> e <code>sys</code></strong>: M\u00f3dulos nativos do Python utilizados para gerir caminhos de diret\u00f3rios. Garantem que o programa consegue localizar corretamente as pastas de dados (<code>dados/</code> e <code>dados_v2/</code>) em qualquer sistema operativo.</li>\n<li><strong><code>pandas</code> (<code>pd</code>)</strong>: Biblioteca essencial para a leitura dos ficheiros CSV. Permite extrair a informa\u00e7\u00e3o estruturada das turmas, disciplinas, salas e exce\u00e7\u00f5es, e mais tarde construir a tabela final do hor\u00e1rio gerado.</li>\n<li><strong><code>ortools.sat.python.cp_model</code></strong>: O \"c\u00e9rebro\" matem\u00e1tico do projeto. Esta biblioteca da Google permite-nos modelar o hor\u00e1rio como um Problema de Satisfa\u00e7\u00e3o de Restri\u00e7\u00f5es (Constraint Programming), criando vari\u00e1veis para as aulas e aplicando as regras do enunciado</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hbol",
+      "code_hash": "107401c812f9f990706b57c3b57f2261",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "TZjA",
+      "code_hash": "0f614217efd8e60c73641dcfcb0b6360",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"2-leitura-e-processamento-dos-ficheiros-csv-carregar_dados\">2. Leitura e Processamento dos Ficheiros CSV (<code>carregar_dados</code>)</h2>\n<span class=\"paragraph\">Nesta fase, tratamos do carregamento e normaliza\u00e7\u00e3o dos dados necess\u00e1rios para a constru\u00e7\u00e3o do hor\u00e1rio. </span>\n<span class=\"paragraph\">A fun\u00e7\u00e3o <code>carregar_dados(pasta)</code> foi desenhada para ser <strong>din\u00e2mica</strong>, aceitando a localiza\u00e7\u00e3o da pasta (ex: <code>\"dados\"</code> ou <code>\"dados_v2\"</code>). Isto garante que o c\u00f3digo cumpre o requisito de n\u00e3o ter dados fixos (<em>hardcoded</em>).</span>\n<h3 id=\"ficheiros-carregados\">Ficheiros Carregados:</h3>\n<ol>\n<li><strong><code>turmas.csv</code></strong>: Lista de turmas a ter aulas.</li>\n<li><strong><code>disciplinas.csv</code></strong>: Cursos, carga hor\u00e1ria semanal, docentes associados, sinaliza\u00e7\u00e3o de per\u00edodo duplo e necessidade de salas especiais.</li>\n<li><strong><code>salas.csv</code></strong>: Invent\u00e1rio e tipos de salas dispon\u00edveis.</li>\n<li><strong><code>disponibilidade_excecoes.csv</code></strong>: Restri\u00e7\u00f5es de hor\u00e1rio dos professores.</li>\n</ol>\n<h3 id=\"mapeamento-temporal-calculo-de-slots\">Mapeamento Temporal (C\u00e1lculo de <em>Slots</em>):</h3>\n<span class=\"paragraph\">Para simplificar a formula\u00e7\u00e3o matem\u00e1tica do solver, convertemos o calend\u00e1rio de 5 dias \u00fateis e 5 per\u00edodos di\u00e1rios num sistema cont\u00ednuo de <strong>25 slots</strong> (<marimo-tex class=\"arithmatex\">||(0||)</marimo-tex> a <marimo-tex class=\"arithmatex\">||(24||)</marimo-tex>):</span>\n<ul>\n<li><strong>Segunda-feira</strong>: Slots 0 a 4</li>\n<li><strong>Ter\u00e7a-feira</strong>: Slots 5 a 9</li>\n<li><strong>Quarta-feira</strong>: Slots 10 a 14</li>\n<li><strong>Quinta-feira</strong>: Slots 15 a 19</li>\n<li><strong>Sexta-feira</strong>: Slots 20 a 24</li>\n</ul>\n<span class=\"paragraph\">A convers\u00e3o autom\u00e1tica \u00e9 feita atrav\u00e9s da f\u00f3rmula:</span>\n<marimo-tex class=\"arithmatex\">||[\\text{slot} = (\\text{dia\\_map}[\\text{dia}] \\times 5) + (\\text{per\u00edodo} - 1)||]</marimo-tex></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "c629e84b1e2ad46b8c79bb40adde5da1",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "LCvc",
+      "code_hash": "7535fcf8d061da81ec7ef9618a029684",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"3-criacao-de-blocos-e-variaveis-de-decisao-do-solver\">3. Cria\u00e7\u00e3o de Blocos e Vari\u00e1veis de Decis\u00e3o do Solver</h2>\n<span class=\"paragraph\">Antes de aplicar as restri\u00e7\u00f5es, o programa transforma a carga hor\u00e1ria das disciplinas em <strong>blocos de aula</strong> e cria as respetivas <strong>vari\u00e1veis de decis\u00e3o</strong> no modelo do OR-Tools (<code>CpModel</code>).</span>\n<h3 id=\"31-divisao-em-blocos-de-aula\">3.1. Divis\u00e3o em Blocos de Aula</h3>\n<ul>\n<li>Cada disciplina \u00e9 desdobrada em blocos consoante a sua carga semanal e a indica\u00e7\u00e3o de per\u00edodo duplo (<code>duplo_periodo</code>):<ul>\n<li><strong>Aulas simples (<code>duplo = False</code>)</strong>: Dura\u00e7\u00e3o de 1 slot.</li>\n<li><strong>Aulas duplas (<code>duplo = True</code>)</strong>: Dura\u00e7\u00e3o de 2 slots consecutivos.</li>\n</ul>\n</li>\n<li>Cada bloco de aula recebe um identificador \u00fanico no formato <code>Turma_Disciplina_Bloco</code> (ex: <code>10A_Matematica_0</code>).</li>\n</ul>\n<h3 id=\"32-definicao-das-variaveis-no-cp-sat\">3.2. Defini\u00e7\u00e3o das Vari\u00e1veis no CP-SAT</h3>\n<span class=\"paragraph\">Para cada bloco <marimo-tex class=\"arithmatex\">||(b||)</marimo-tex>, s\u00e3o definidas tr\u00eas vari\u00e1veis principais:</span>\n<ol>\n<li>\n<span class=\"paragraph\"><strong><code>start_var</code></strong>: Slot de in\u00edcio da aula.</span>\n<div class=\"language-scdoc highlight\"><pre><span></span><code><span class=\"k\">*</span> *Valida\u00e7\u00e3o de limite*: Se a aula tiver dura\u00e7\u00e3o de 2 tempos, \u00e9 impedida de come\u00e7ar no \u00faltimo per\u00edodo do dia (slots 4, 9, 14, 19, 24), evitando que uma aula fique dividida entre dois dias diferentes.\n</code></pre></div>\n</li>\n<li><strong><code>end_var</code></strong>: Slot de t\u00e9rmino da aula (<marimo-tex class=\"arithmatex\">||(\\text{start} + \\text{dura\u00e7\u00e3o}||)</marimo-tex>).</li>\n<li><strong><code>interval_var</code></strong>: Vari\u00e1vel do tipo <code>NewIntervalVar</code> que encapsula o in\u00edcio, a dura\u00e7\u00e3o e o fim do bloco. Esta estrutura \u00e9 a base utilizada pelo solver para validar sobreposi\u00e7\u00f5es.</li>\n</ol></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PJTH",
+      "code_hash": "e88330b1bc5de52745132131a2f3f9ab",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"4-implementacao-das-restricoes-hard-r1-a-r7\">4. Implementa\u00e7\u00e3o das Restri\u00e7\u00f5es Hard (R1 a R7)</h2>\n<span class=\"paragraph\">Para garantir um hor\u00e1rio v\u00e1lido e exequ\u00edvel, aplicam-se restri\u00e7\u00f5es l\u00f3gicas fundamentais sobre as vari\u00e1veis de decis\u00e3o:</span>\n<h3 id=\"41-ausencia-de-sobreposicao-de-turmas-e-professores-r1-e-r5\">4.1. Aus\u00eancia de Sobreposi\u00e7\u00e3o de Turmas e Professores (R1 e R5)</h3>\n<span class=\"paragraph\">Utiliza-se o m\u00e9todo est\u00e1tico <code>model.AddNoOverlap</code> sobre os intervalos de tempo definidos:</span>\n<ul>\n<li><strong>R1 (Turmas)</strong>: Uma turma s\u00f3 pode frequentar uma aula de cada vez.</li>\n<li><strong>R5 (Professores)</strong>: Um docente n\u00e3o pode estar alocado a duas turmas em simult\u00e2neo.</li>\n</ul>\n<h3 id=\"42-indisponibilidade-de-professores-r6\">4.2. Indisponibilidade de Professores (R6)</h3>\n<span class=\"paragraph\">Para cada restri\u00e7\u00e3o presente em <code>disponibilidade_excecoes.csv</code>:</span>\n<ul>\n<li>Garante-se que <code>start != slot_indisponivel</code>.</li>\n<li>Caso a aula seja <strong>dupla</strong> (dura\u00e7\u00e3o = 2), adiciona-se tamb\u00e9m a restri\u00e7\u00e3o <code>start != slot_indisponivel - 1</code>, impedindo que a segunda metade do bloco coincida com o hor\u00e1rio indispon\u00edvel.</li>\n</ul>\n<h3 id=\"43-limite-diario-de-disciplinas-por-turma-r3\">4.3. Limite Di\u00e1rio de Disciplinas por Turma (R3)</h3>\n<span class=\"paragraph\">Para evitar a concentra\u00e7\u00e3o da mesma disciplina no mesmo dia:</span>\n<ul>\n<li>Associa-se uma vari\u00e1vel booleana (<code>no_dia</code>) a cada bloco para verificar se a aula ocorre num determinado dia (5 slots).</li>\n<li>Aplica-se a regra de que o somat\u00f3rio de aulas da mesma disciplina num \u00fanico dia para uma determinada turma tem de ser <marimo-tex class=\"arithmatex\">||(\\le 1||)</marimo-tex>.</li>\n</ul>\n<h3 id=\"44-capacidade-e-tipos-de-salas-r7\">4.4. Capacidade e Tipos de Salas (R7)</h3>\n<span class=\"paragraph\">Garante-se que a procura por salas nunca excede a oferta f\u00edsica da escola:</span>\n<ul>\n<li>Mapeia-se o n\u00famero de salas dispon\u00edveis por tipo (ex: <code>normal</code>, <code>laboratorio</code>).</li>\n<li>Para cada slot <marimo-tex class=\"arithmatex\">||(s||)</marimo-tex>, avalia-se atrav\u00e9s da vari\u00e1vel booleana <code>em_curso</code> se cada aula est\u00e1 a decorrer nesse instante.</li>\n<li>Garante-se que o somat\u00f3rio de aulas ativas num slot para um dado tipo de sala \u00e9 menor ou igual ao n\u00famero total de salas desse tipo existente na institui\u00e7\u00e3o.</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "NgdI",
+      "code_hash": "216e512e83a36ec0d3377db7a160a7ce",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"5-resolucao-incremental-e-minimizacao-de-alteracoes-r9\">5. Resolu\u00e7\u00e3o Incremental e Minimiza\u00e7\u00e3o de Altera\u00e7\u00f5es (R9)</h2>\n<span class=\"paragraph\">O requisito <strong>R9</strong> exige a capacidade de atualizar um hor\u00e1rio previamente existente (<marimo-tex class=\"arithmatex\">||(H_0||)</marimo-tex>) quando surgem altera\u00e7\u00f5es na estrutura escolar (novos dados em <code>dados_v2</code>), gerando um novo hor\u00e1rio (<marimo-tex class=\"arithmatex\">||(H_1||)</marimo-tex>) com o <strong>m\u00ednimo de altera\u00e7\u00f5es poss\u00edvel</strong> para alunos e professores.</span>\n<h3 id=\"51-sugestoes-ao-solver-addhint\">5.1. Sugest\u00f5es ao Solver (<code>AddHint</code>)</h3>\n<span class=\"paragraph\">Para otimizar o tempo de pesquisa e manter a estabilidade do hor\u00e1rio, o solver utiliza as posi\u00e7\u00f5es atribu\u00eddas no hor\u00e1rio base <marimo-tex class=\"arithmatex\">||(H_0||)</marimo-tex> como ponto de partida (<em>warm start</em>):</span>\n<ul>\n<li><code>model.AddHint(vars_bloco[b_id][\"start\"], slot_antigo)</code></li>\n</ul>\n<h3 id=\"52-controlo-e-minimizacao-de-mudancas\">5.2. Controlo e Minimiza\u00e7\u00e3o de Mudan\u00e7as</h3>\n<span class=\"paragraph\">Para quantificar e conter o impacto das altera\u00e7\u00f5es:</span>\n<ol>\n<li>Para cada aula que j\u00e1 existia no hor\u00e1rio base <marimo-tex class=\"arithmatex\">||(H_0||)</marimo-tex>, define-se uma vari\u00e1vel booleana <code>mudou</code>.</li>\n<li>A vari\u00e1vel assume o valor <code>1</code> se o novo slot for diferente do anterior, e <code>0</code> se a aula mantiver o mesmo hor\u00e1rio.</li>\n<li>O modelo estabelece como <strong>fun\u00e7\u00e3o objetivo</strong> a minimiza\u00e7\u00e3o do somat\u00f3rio de mudan\u00e7as:\n   <code>model.Minimize(sum(mudancas))</code></li>\n</ol>\n<span class=\"paragraph\">Com esta abordagem, o CP-SAT garante que o novo hor\u00e1rio <marimo-tex class=\"arithmatex\">||(H_1||)</marimo-tex> cumpre todas as restri\u00e7\u00f5es atualizadas, reordenando estritamente as aulas indispens\u00e1veis.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "EeHu",
+      "code_hash": "d981e7df9a3399db8429403449aa5f36",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"6-execucao-medicao-de-desempenho-e-validacao-automatica\">6. Execu\u00e7\u00e3o, Medi\u00e7\u00e3o de Desempenho e Valida\u00e7\u00e3o Autom\u00e1tica</h2>\n<span class=\"paragraph\">Nesta sec\u00e7\u00e3o final, executa-se o fluxo completo do gerador de hor\u00e1rios, mede-se a efici\u00eancia da constru\u00e7\u00e3o incremental e valida-se rigorosamente a conformidade das solu\u00e7\u00f5es obtidas.</span>\n<h3 id=\"61-fluxo-incremental-h_0-rightarrow-h_1-e-medicao-de-tempos\">6.1. Fluxo Incremental (<marimo-tex class=\"arithmatex\">||(H_0 \\rightarrow H_1||)</marimo-tex>) e Medi\u00e7\u00e3o de Tempos</h3>\n<ol>\n<li><strong>Hor\u00e1rio Base (<marimo-tex class=\"arithmatex\">||(H_0||)</marimo-tex>)</strong>: Gerado a partir do conjunto de dados inicial localizado na pasta <code>dados/</code>.</li>\n<li><strong>Hor\u00e1rio Incremental (<marimo-tex class=\"arithmatex\">||(H_1||)</marimo-tex>)</strong>: Gerado a partir de <code>dados_v2/</code> (com novas exce\u00e7\u00f5es de disponibilidade de professores), fornecendo <marimo-tex class=\"arithmatex\">||(H_0||)</marimo-tex> ao solver como refer\u00eancia.</li>\n<li><strong>M\u00e9tricas de Desempenho</strong>:<ul>\n<li><strong>Tempo de Execu\u00e7\u00e3o</strong>: Registo dos segundos necess\u00e1rios para calcular <marimo-tex class=\"arithmatex\">||(H_0||)</marimo-tex> e <marimo-tex class=\"arithmatex\">||(H_1||)</marimo-tex>.</li>\n<li><strong>Taxa de Altera\u00e7\u00e3o</strong>: Contagem direta das aulas cujo <code>slot_inicio</code> sofreu altera\u00e7\u00e3o entre <marimo-tex class=\"arithmatex\">||(H_0||)</marimo-tex> e <marimo-tex class=\"arithmatex\">||(H_1||)</marimo-tex>, demonstrando o impacto m\u00ednimo na rotina escolar.</li>\n</ul>\n</li>\n</ol>\n<h3 id=\"62-validador-automatico-post-hoc-validar_horario\">6.2. Validador Autom\u00e1tico Post-Hoc (<code>validar_horario</code>)</h3>\n<span class=\"paragraph\">Para garantir a integridade dos resultados independentemente do solver, foi desenvolvida a fun\u00e7\u00e3o de verifica\u00e7\u00e3o autom\u00e1tica:</span>\n<ul>\n<li><strong>Desdobramento de Aulas Duplas</strong>: Converte blocos de dura\u00e7\u00e3o 2 em registos expl\u00edcitos para cada per\u00edodo individual ocupado.</li>\n<li><strong>Teste R1 (Turmas)</strong>: Agrupa por <code>(dia, per\u00edodo, turma)</code> e confirma a inexist\u00eancia de sobreposi\u00e7\u00e3o de aulas.</li>\n<li><strong>Teste R5 (Professores)</strong>: Agrupa por <code>(dia, per\u00edodo, professor)</code> e confirma que nenhum docente tem duas aulas no mesmo instante.</li>\n</ul>\n<h3 id=\"63-apresentacao-dos-resultados\">6.3. Apresenta\u00e7\u00e3o dos Resultados</h3>\n<span class=\"paragraph\">A visualiza\u00e7\u00e3o final do hor\u00e1rio \u00e9 integrada na interface interativa do Marimo atrav\u00e9s da componente <code>mo.ui.table(H1)</code>, permitindo ordena\u00e7\u00e3o e filtragem din\u00e2mica das aulas geradas.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "d82f2710f9799e9c9f348b1387f1e148",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "12698bc95745d641bd4b159cfb8cbd08",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- GERAR HOR\u00c1RIO INICIAL (H0) ---\nH0 gerado em 0.22 segundos.\n\n--- GERAR HOR\u00c1RIO INCREMENTAL (H1) ---\nH1 gerado em 0.26 segundos.\nTotal de aulas que tiveram de mudar de s\u00edtio: 1\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "3b3808c10b19e6edf93949e8fef240db",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "9e96a372e85b848b94573eb5d6e3b00b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "\u2705 SUCESSO: O hor\u00e1rio gerado \u00e9 V\u00c1LIDO! Passou no teste autom\u00e1tico de sobreposi\u00e7\u00f5es (R1 e R5).\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "Xref",
+      "code_hash": "fd7bd625c22260ccb3591b293a4da26d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='Xref-0' random-id='a60f4472-42ea-e8b7-1a09-943cfaaab38e'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;_marimo_row_id&#92;&quot;:0,&#92;&quot;id_bloco&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA_Matem&#92;&#92;u00e1tica_0&#92;&quot;,&#92;&quot;turma&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA&#92;&quot;,&#92;&quot;disciplina&#92;&quot;:&#92;&quot;Matem&#92;&#92;u00e1tica&#92;&quot;,&#92;&quot;professor&#92;&quot;:&#92;&quot;Prof. Ana&#92;&quot;,&#92;&quot;sala_especial&#92;&quot;:&#92;&quot;normal&#92;&quot;,&#92;&quot;dia&#92;&quot;:&#92;&quot;Qui&#92;&quot;,&#92;&quot;periodo&#92;&quot;:3,&#92;&quot;duracao&#92;&quot;:1,&#92;&quot;slot_inicio&#92;&quot;:17},{&#92;&quot;_marimo_row_id&#92;&quot;:1,&#92;&quot;id_bloco&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA_Matem&#92;&#92;u00e1tica_1&#92;&quot;,&#92;&quot;turma&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA&#92;&quot;,&#92;&quot;disciplina&#92;&quot;:&#92;&quot;Matem&#92;&#92;u00e1tica&#92;&quot;,&#92;&quot;professor&#92;&quot;:&#92;&quot;Prof. Ana&#92;&quot;,&#92;&quot;sala_especial&#92;&quot;:&#92;&quot;normal&#92;&quot;,&#92;&quot;dia&#92;&quot;:&#92;&quot;Qua&#92;&quot;,&#92;&quot;periodo&#92;&quot;:1,&#92;&quot;duracao&#92;&quot;:1,&#92;&quot;slot_inicio&#92;&quot;:10},{&#92;&quot;_marimo_row_id&#92;&quot;:2,&#92;&quot;id_bloco&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA_Matem&#92;&#92;u00e1tica_2&#92;&quot;,&#92;&quot;turma&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA&#92;&quot;,&#92;&quot;disciplina&#92;&quot;:&#92;&quot;Matem&#92;&#92;u00e1tica&#92;&quot;,&#92;&quot;professor&#92;&quot;:&#92;&quot;Prof. Ana&#92;&quot;,&#92;&quot;sala_especial&#92;&quot;:&#92;&quot;normal&#92;&quot;,&#92;&quot;dia&#92;&quot;:&#92;&quot;Sex&#92;&quot;,&#92;&quot;periodo&#92;&quot;:2,&#92;&quot;duracao&#92;&quot;:1,&#92;&quot;slot_inicio&#92;&quot;:21},{&#92;&quot;_marimo_row_id&#92;&quot;:3,&#92;&quot;id_bloco&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA_Matem&#92;&#92;u00e1tica_3&#92;&quot;,&#92;&quot;turma&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA&#92;&quot;,&#92;&quot;disciplina&#92;&quot;:&#92;&quot;Matem&#92;&#92;u00e1tica&#92;&quot;,&#92;&quot;professor&#92;&quot;:&#92;&quot;Prof. Ana&#92;&quot;,&#92;&quot;sala_especial&#92;&quot;:&#92;&quot;normal&#92;&quot;,&#92;&quot;dia&#92;&quot;:&#92;&quot;Ter&#92;&quot;,&#92;&quot;periodo&#92;&quot;:1,&#92;&quot;duracao&#92;&quot;:1,&#92;&quot;slot_inicio&#92;&quot;:5},{&#92;&quot;_marimo_row_id&#92;&quot;:4,&#92;&quot;id_bloco&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA_Portugu&#92;&#92;u00eas_0&#92;&quot;,&#92;&quot;turma&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA&#92;&quot;,&#92;&quot;disciplina&#92;&quot;:&#92;&quot;Portugu&#92;&#92;u00eas&#92;&quot;,&#92;&quot;professor&#92;&quot;:&#92;&quot;Prof. Bruno&#92;&quot;,&#92;&quot;sala_especial&#92;&quot;:&#92;&quot;normal&#92;&quot;,&#92;&quot;dia&#92;&quot;:&#92;&quot;Qua&#92;&quot;,&#92;&quot;periodo&#92;&quot;:2,&#92;&quot;duracao&#92;&quot;:1,&#92;&quot;slot_inicio&#92;&quot;:11},{&#92;&quot;_marimo_row_id&#92;&quot;:5,&#92;&quot;id_bloco&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA_Portugu&#92;&#92;u00eas_1&#92;&quot;,&#92;&quot;turma&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA&#92;&quot;,&#92;&quot;disciplina&#92;&quot;:&#92;&quot;Portugu&#92;&#92;u00eas&#92;&quot;,&#92;&quot;professor&#92;&quot;:&#92;&quot;Prof. Bruno&#92;&quot;,&#92;&quot;sala_especial&#92;&quot;:&#92;&quot;normal&#92;&quot;,&#92;&quot;dia&#92;&quot;:&#92;&quot;Qui&#92;&quot;,&#92;&quot;periodo&#92;&quot;:4,&#92;&quot;duracao&#92;&quot;:1,&#92;&quot;slot_inicio&#92;&quot;:18},{&#92;&quot;_marimo_row_id&#92;&quot;:6,&#92;&quot;id_bloco&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA_Portugu&#92;&#92;u00eas_2&#92;&quot;,&#92;&quot;turma&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA&#92;&quot;,&#92;&quot;disciplina&#92;&quot;:&#92;&quot;Portugu&#92;&#92;u00eas&#92;&quot;,&#92;&quot;professor&#92;&quot;:&#92;&quot;Prof. Bruno&#92;&quot;,&#92;&quot;sala_especial&#92;&quot;:&#92;&quot;normal&#92;&quot;,&#92;&quot;dia&#92;&quot;:&#92;&quot;Sex&#92;&quot;,&#92;&quot;periodo&#92;&quot;:4,&#92;&quot;duracao&#92;&quot;:1,&#92;&quot;slot_inicio&#92;&quot;:23},{&#92;&quot;_marimo_row_id&#92;&quot;:7,&#92;&quot;id_bloco&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA_Portugu&#92;&#92;u00eas_3&#92;&quot;,&#92;&quot;turma&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA&#92;&quot;,&#92;&quot;disciplina&#92;&quot;:&#92;&quot;Portugu&#92;&#92;u00eas&#92;&quot;,&#92;&quot;professor&#92;&quot;:&#92;&quot;Prof. Bruno&#92;&quot;,&#92;&quot;sala_especial&#92;&quot;:&#92;&quot;normal&#92;&quot;,&#92;&quot;dia&#92;&quot;:&#92;&quot;Seg&#92;&quot;,&#92;&quot;periodo&#92;&quot;:4,&#92;&quot;duracao&#92;&quot;:1,&#92;&quot;slot_inicio&#92;&quot;:3},{&#92;&quot;_marimo_row_id&#92;&quot;:8,&#92;&quot;id_bloco&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA_Ci&#92;&#92;u00eancias_0&#92;&quot;,&#92;&quot;turma&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA&#92;&quot;,&#92;&quot;disciplina&#92;&quot;:&#92;&quot;Ci&#92;&#92;u00eancias&#92;&quot;,&#92;&quot;professor&#92;&quot;:&#92;&quot;Prof. Carla&#92;&quot;,&#92;&quot;sala_especial&#92;&quot;:&#92;&quot;Laborat&#92;&#92;u00f3rio&#92;&quot;,&#92;&quot;dia&#92;&quot;:&#92;&quot;Ter&#92;&quot;,&#92;&quot;periodo&#92;&quot;:2,&#92;&quot;duracao&#92;&quot;:1,&#92;&quot;slot_inicio&#92;&quot;:6},{&#92;&quot;_marimo_row_id&#92;&quot;:9,&#92;&quot;id_bloco&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA_Ci&#92;&#92;u00eancias_1&#92;&quot;,&#92;&quot;turma&#92;&quot;:&#92;&quot;7&#92;&#92;u00baA&#92;&quot;,&#92;&quot;disciplina&#92;&quot;:&#92;&quot;Ci&#92;&#92;u00eancias&#92;&quot;,&#92;&quot;professor&#92;&quot;:&#92;&quot;Prof. Carla&#92;&quot;,&#92;&quot;sala_especial&#92;&quot;:&#92;&quot;Laborat&#92;&#92;u00f3rio&#92;&quot;,&#92;&quot;dia&#92;&quot;:&#92;&quot;Seg&#92;&quot;,&#92;&quot;periodo&#92;&quot;:2,&#92;&quot;duracao&#92;&quot;:1,&#92;&quot;slot_inicio&#92;&quot;:1}]&quot;' data-total-rows='32' data-total-columns='9' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;id_bloco&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;turma&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;disciplina&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;professor&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;sala_especial&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;dia&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;periodo&quot;,[&quot;integer&quot;,&quot;int64&quot;]],[&quot;duracao&quot;,[&quot;integer&quot;,&quot;int64&quot;]],[&quot;slot_inicio&quot;,[&quot;integer&quot;,&quot;int64&quot;]]]' data-selection='&quot;multi&quot;' data-show-filters='true' data-show-download='true' data-show-search='true' data-show-column-summaries='true' data-show-data-types='true' data-show-page-size-selector='true' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-hidden-columns='[]' data-has-stable-row-id='true' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
